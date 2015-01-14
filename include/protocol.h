@@ -1,19 +1,17 @@
-#ifndef _NETWORK_H_INCLUDED
-#define _NETWORK_H_INCLUDED
+#ifndef _PROTOCOL_H_INCLUDED
+#define _PROTOCOL_H_INCLUDED
 
 #include <array>
 #include <cstdint>
 
-#include "secnet.hpp"
+#include "secnet.h"
 #include "sigslot.h"
 
-#define NETWORK_PORTNUMBER	3938
-
-class Network
+class Protocol
 {
 	public:
-		Network(uint16_t port = NETWORK_PORTNUMBER);
-		virtual ~Network();
+		Protocol(SecNet* network);
+		virtual ~Protocol();
 
 		void sendBlock(std::array<uint8_t> data);
 		void sendMapping(uint64_t blockA, uint64_t blockB);
