@@ -17,6 +17,7 @@ Let's say we want to have block 5. We would ask the shuffle-server which block w
 Since XOR can be attacked with known-plaintext-attacks, we don't use a traditional key. We split each byte in half, giving us a lower and a higher half-byte (nibble). Then we generate a random byte and do the same again. Now we XOR the lower nibble of the random byte with the lower nibble of the data byte and then repeat this for the higher nibbles. At the end, we store the the XORed higher nibble with the random lower nibble on server A and the higher random nibbler with the XORed lower nibble on server B.
 
 ### Encrypt
+```
 byte data
 byte random = bestRandomnessInTheWorld()
 
@@ -27,16 +28,17 @@ nibble randomUpper = UPPER(data)
 
 nibble resultLower = dataLower XOR randomLower
 nibble resultUpper = dataUpper XOR randomUpper
-
+ 
 byte resultA = TOHIGHER(resultUpper) | randomLower
 byte resultB = TOHIGHER(randomUpper) | resultLower
-
+```
 ### Decrypt
+```
 byte dataA
 byte dataB
 
 byte data = dataA XOR dataB
-
+```
 It's actually quite simple and we currently don't see any problems with this, but we are no cryptographers so please let us know if you see any. If you know the plaintext of some of the XORed nibbles on one server, you still can't guess the other data as there isn't any repeated key. 
 
 ## Known problems
