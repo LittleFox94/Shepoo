@@ -1,2 +1,2 @@
 # Shepoo
-It's sheep poo
+It's sheep poo.
