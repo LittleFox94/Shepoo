@@ -1,8 +1,69 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <errno.h>
 
 #include "../include/secnet.h"
+
+// no sane human will use packets with more than 128MB payload
+// at least not in the current century.
+#define MAX_PACKET_PAYLOAD_SIZE	134217728
+
+bool SecNet::_listening;
+int SecNet::_serverSocket;
+sigslot::signal3<SecNet::Packet, uint8_t*, SecNet*> SecNet::receivedPacket;
+
+SecNet::SecNet(int socket, SSL_CTX* serverContext)
+{
+	close(SecNet::_serverSocket);
+	
+	_socket = socket;
+	_ssl = SSL_new(serverContext);
+
+	if(_ssl == 0)
+	{
+		std::cout << "Could not create new SSL connection!" << std::endl;
+		exit(-1); // if the fork can't handle the client, there is no reason to allow it staying alive >:]
+	}
+
+	SSL_set_fd(_ssl, _socket);
+
+	if(SSL_accept(_ssl) != 1)
+	{
+		std::cout << "SSL Handshake failed!" << std::endl;
+		exit(-1); // still no reason to allow it staying alive >:]
+	}
+
+	// handle the connection
+	Packet packet;
+	bzero(&packet, sizeof(packet));
+	SSL_read(_ssl, &packet, sizeof(packet));
+
+	if(packet.payloadLength > MAX_PACKET_PAYLOAD_SIZE)
+		exit(-1); // nope. Just nope.
+
+	uint8_t* payload = new uint8_t[packet.payloadLength];
+	SSL_read(_ssl, payload, packet.payloadLength);
+
+	receivedPacket.emit(packet, payload, this);
+}
+
+SecNet::~SecNet()
+{
+	SSL_shutdown(_ssl);
+	close(_socket);
+	SSL_free(_ssl);
+
+	exit(0);
+}
+
+void SecNet::sendPacket(Packet packet, uint8_t* payload)
+{
+	SSL_write(_ssl, &packet, sizeof(packet));
+	SSL_write(_ssl, payload, packet.payloadLength);
+}
 
 void SecNet::Initialize(std::string listenAddress, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList)
 {
@@ -100,7 +161,43 @@ void SecNet::Initialize(std::string listenAddress, std::string certificateFile, 
 		exit(-1);
 	}
 
+	SecNet::_listening = true;
+
 	ListenLoop(serverContext);
 }
 
+void SecNet::ListenLoop(SSL_CTX* serverContext)
+{
+	sockaddr_in6 clientAddress;
+	socklen_t caLength = sizeof(clientAddress);
 
+	while(SecNet::_listening)
+	{
+		int newSocket = accept(SecNet::_serverSocket, (struct sockaddr*)&clientAddress, &caLength);
+
+		if(newSocket < 0)
+		{
+			std::cout << "Error accepting new connection: " << errno << std::endl;
+		}
+		else
+		{
+			__pid_t clientProcess = fork();
+
+			if(clientProcess == 0)
+			{
+				// we are the new fork
+				SecNet clientInstance(newSocket, serverContext);
+				exit(-1);
+			}
+			else
+			{
+				close(newSocket); // we are the server process
+
+				char* ip = new char[INET6_ADDRSTRLEN];
+				getnameinfo((struct sockaddr*)&clientAddress, caLength, ip, INET6_ADDRSTRLEN, 0, 0, NI_NUMERICHOST);
+
+				std::cout << "Forked for client-handling. Client-IP: " << ip << std::endl;
+			}
+		}
+	}
+}

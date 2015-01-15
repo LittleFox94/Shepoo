@@ -3,6 +3,7 @@
 
 #include <string>
 #include <openssl/ssl.h>
+#include <stdint.h>
 
 #include "sigslot.h"
 
@@ -13,7 +14,6 @@ class SecNet
 		uint8_t version;
 		uint8_t command;
 		uint64_t payloadLength;
-		uint8_t* payload;
 	} __attribute__((packed)) Packet;
 
 	public:
@@ -21,17 +21,21 @@ class SecNet
 
 		static void Initialize(std::string listen, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList = "");
 
-		SecNet(int socket);
 		virtual ~SecNet();
 
-		sigslot::signal1<Packet*> receivedPacket;
-		void sendPacket(Packet* packet);
+		static sigslot::signal3<Packet, uint8_t*, SecNet*> receivedPacket;
+		void sendPacket(Packet packet, uint8_t* payload);
 
 	private:
 		static bool _listening;
 		static  int _serverSocket;
 
 		static void ListenLoop(SSL_CTX* serverContext);
+
+		SecNet(int socket, SSL_CTX* serverContext);
+		
+		SSL* _ssl;
+		int _socket;
 };
 
 #endif
