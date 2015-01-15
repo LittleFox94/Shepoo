@@ -1,13 +1,17 @@
+#include <iostream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 #include "../include/secnet.h"
 
-void SecNet::Initialize(std::string listen, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList)
+void SecNet::Initialize(std::string listenAddress, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList)
 {
 	SSL_library_init();
 	SSL_load_error_strings();
 	SSL_METHOD* serverMethod = (SSL_METHOD*)TLSv1_2_server_method();
 	SSL_CTX* serverContext = SSL_CTX_new(serverMethod);
 
-	if(!sslServerContext)
+	if(!serverContext)
 	{
 		std::cout << "SSL_CTX_new() failed!" << std::endl;
 		exit(-1);
@@ -25,7 +29,7 @@ void SecNet::Initialize(std::string listen, std::string certificateFile, std::st
 
 	if(status <= 0)
 	{
-		std::cout << "Could not load private-key-file!" << std::endl:
+		std::cout << "Could not load private-key-file!" << std::endl;
 		exit(-1);
 	}
 
@@ -44,7 +48,9 @@ void SecNet::Initialize(std::string listen, std::string certificateFile, std::st
 		exit(-1);
 	}
 
-	DH* dh = PEM_read_DHparams(dhParamFile.c_str(), NULL, NULL, NULL);
+	FILE* dhFile = fopen(dhParamFile.c_str(), "rb");
+	DH* dh = PEM_read_DHparams(dhFile, NULL, NULL, NULL);
+	fclose(dhFile);
 	status = SSL_CTX_set_tmp_dh(serverContext, dh);
 
 	if(status <= 0)
@@ -75,7 +81,7 @@ void SecNet::Initialize(std::string listen, std::string certificateFile, std::st
 	struct sockaddr_in6 address;
 	bzero(&address, sizeof(address));
 	address.sin6_family = AF_INET6;
-	address.sin6_port = htons(DefaultPort);
+	address.sin6_port = htons(SecNet::DefaultPort);
 	address.sin6_addr = in6addr_any;
 
 	status = bind(_serverSocket, (struct sockaddr*)&address, sizeof(address));
@@ -96,3 +102,5 @@ void SecNet::Initialize(std::string listen, std::string certificateFile, std::st
 
 	ListenLoop(serverContext);
 }
+
+
