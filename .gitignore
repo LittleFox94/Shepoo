@@ -26,6 +26,7 @@
 *.exe
 *.out
 *.app
+shepoo
 
 # vim swp file
 *.swp
