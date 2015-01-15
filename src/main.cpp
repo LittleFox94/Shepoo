@@ -114,6 +114,8 @@ int main(int argc, char* argv[])
 		help();
 		return 0;
 	}
+
+	SecNet::Initialize(listenAddress, tlsCertificateFile, tlsPrivateKeyFile, tlsDHParamFile, tlsCipherSuite);
 }
 
 void help()
