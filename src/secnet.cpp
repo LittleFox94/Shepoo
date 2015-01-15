@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <errno.h>
+#include <openssl/err.h>
 
 #include "../include/secnet.h"
 
@@ -33,6 +34,7 @@ SecNet::SecNet(int socket, SSL_CTX* serverContext)
 	if(SSL_accept(_ssl) != 1)
 	{
 		std::cout << "SSL Handshake failed!" << std::endl;
+		ERR_print_errors_cb(SecNet::sslErrorCallback, NULL);
 		exit(-1); // still no reason to allow it staying alive >:]
 	}
 
@@ -100,7 +102,7 @@ void SecNet::Initialize(std::string listenAddress, std::string certificateFile, 
 		exit(-1);
 	}
 
-	long sslopt = SSL_OP_SINGLE_DH_USE | SSL_OP_NO_TICKET | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
+	long sslopt = SSL_OP_SINGLE_DH_USE;
 	status = SSL_CTX_set_options(serverContext, sslopt);
 
 	if(status <= 0)
@@ -200,4 +202,10 @@ void SecNet::ListenLoop(SSL_CTX* serverContext)
 			}
 		}
 	}
+}
+
+int SecNet::sslErrorCallback(const char* message, size_t length, void* userData)
+{
+	std::cout << "SSL: " << message << std::endl;
+	return 0;
 }

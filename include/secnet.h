@@ -21,6 +21,8 @@ class SecNet
 
 		static void Initialize(std::string listen, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList = "");
 
+		static int sslErrorCallback(const char* message, size_t length, void* userData);
+
 		virtual ~SecNet();
 
 		static sigslot::signal3<Packet, uint8_t*, SecNet*> receivedPacket;
