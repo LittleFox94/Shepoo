@@ -4,6 +4,8 @@
 #include <string>
 #include <openssl/ssl.h>
 
+#include "sigslot.h"
+
 class SecNet
 {
 	typedef struct
@@ -22,12 +24,12 @@ class SecNet
 		SecNet(int socket);
 		virtual ~SecNet();
 
-		signal1<Packet*> receivedPacket;
+		sigslot::signal1<Packet*> receivedPacket;
 		void sendPacket(Packet* packet);
 
 	private:
-		bool _listening;
-		int _serverSocket;
+		static bool _listening;
+		static  int _serverSocket;
 
 		static void ListenLoop(SSL_CTX* serverContext);
 };
