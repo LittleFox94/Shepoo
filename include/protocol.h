@@ -1,23 +1,35 @@
 #ifndef _PROTOCOL_H_INCLUDED
 #define _PROTOCOL_H_INCLUDED
 
-#include <array>
-#include <cstdint>
+#include <stdint.h>
 
 #include "secnet.h"
 #include "sigslot.h"
+#include "blockstorage.h"
 
-class Protocol
+class Protocol : sigslot::has_slots<>
 {
+	enum Commands
+	{
+		COMMAND_READ_BLOCK = 1,
+		COMMAND_WRITE_BLOCK = 2,
+		COMMAND_LOCK_BLOCKS = 3,
+		COMMAND_GET_MAPPING = 4,
+		COMMAND_BLOCK_ANSWER = 5,
+		COMMAND_IS_BLOCK_AVAILABLE = 6,
+		COMMAND_OK = 7,
+		COMMAND_NOK = 8
+	};
+
 	public:
-		Protocol(SecNet* network);
-		virtual ~Protocol();
+		Protocol(Blockstorage* storage);
 
-		void sendBlock(std::array<uint8_t> data);
-		void sendMapping(uint64_t blockA, uint64_t blockB);
+		void packetReceived(SecNet::Packet packet, uint8_t* payload, SecNet* secnet);
 
-		signal1<uint64_t> signalBlockRequested;
-		signal1<uint64_t> mappingRequested;
+	private:
+		Blockstorage* _blockStorage;
+
+		static inline uint64_t extractUint64FromPayload(uint8_t* payload);
 };
 
 #endif

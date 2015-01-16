@@ -9,14 +9,14 @@
 
 class SecNet
 {
-	typedef struct
-	{
-		uint8_t version;
-		uint8_t command;
-		uint64_t payloadLength;
-	} __attribute__((packed)) Packet;
-
 	public:
+		typedef struct
+		{
+			uint8_t version;
+			uint8_t command;
+			uint64_t payloadLength;
+		} __attribute__((packed)) Packet;
+
 		static const uint16_t DefaultPort = 3938;
 
 		static void Initialize(std::string listen, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList = "");
