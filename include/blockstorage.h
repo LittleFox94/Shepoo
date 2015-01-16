@@ -13,6 +13,10 @@ class Blockstorage
 		uint8_t* getBlock(uint64_t num);
 		void storeBlock(uint64_t num, uint8_t* data);
 		bool isBlockAvailable(uint64_t num);
+
+	private:
+		std::string _path;
+		uint64_t _fileLength;
 };
 
 #endif
