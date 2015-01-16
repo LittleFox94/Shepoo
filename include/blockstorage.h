@@ -2,6 +2,7 @@
 #define _BLOCKSTORAGE_H_INCLUDED
 
 #include <string>
+#include <stdint.h>
 
 class Blockstorage
 {
