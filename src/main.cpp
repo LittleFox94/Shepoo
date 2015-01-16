@@ -3,6 +3,8 @@
 
 #include "../config.h"
 #include "../include/secnet.h"
+#include "../include/protocol.h"
+#include "../include/blockstorage.h"
 
 void help();
 
@@ -114,6 +116,11 @@ int main(int argc, char* argv[])
 		help();
 		return 0;
 	}
+
+	Blockstorage storage(blockStorageFile);
+
+	Protocol protocolHandler(&storage);
+	SecNet::receivedPacket.connect(&protocolHandler, &Protocol::packetReceived);
 
 	SecNet::Initialize(listenAddress, tlsCertificateFile, tlsPrivateKeyFile, tlsDHParamFile, tlsCipherSuite);
 }
