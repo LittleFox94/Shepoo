@@ -7,7 +7,7 @@
 #include "sigslot.h"
 #include "blockstorage.h"
 
-class Protocol : sigslot::has_slots<>
+class Protocol : public sigslot::has_slots<>
 {
 	enum Commands
 	{
