@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <limits.h>
 
 #include "../config.h"
 #include "../include/secnet.h"
@@ -117,11 +118,33 @@ int main(int argc, char* argv[])
 	if(tlsCertificateFile == "" || tlsPrivateKeyFile == "" || tlsDHParamFile == "")
 		missingArguments = true;
 
+	char* cwd = new char[PATH_MAX];
+	getcwd(cwd, PATH_MAX);
+
 	if(missingArguments)
 	{
 		help();
 		return 0;
 	}
+
+	if(tlsCertificateFile.at(0) != '/')
+		tlsCertificateFile = std::string(cwd) + "/" + tlsCertificateFile;
+	
+	if(tlsPrivateKeyFile.at(0) != '/')
+		tlsPrivateKeyFile = std::string(cwd) + "/" + tlsPrivateKeyFile;
+
+	if(tlsDHParamFile.at(0) != '/')
+		tlsDHParamFile = std::string(cwd) + "/" + tlsDHParamFile;
+	
+	if(blockStorageFile != "" && blockStorageFile.at(0) != '/')
+		blockStorageFile = std::string(cwd) + "/" + blockStorageFile;
+
+	if(shuffleDBFile != "" && shuffleDBFile.at(0) != '/')
+		shuffleDBFile = std::string(cwd) + "/" + shuffleDBFile;
+
+	if(logFile != "" && logFile.at(0) != '/')
+		logFile = std::string(cwd) + "/" + logFile;
+
 
 	if(flagDaemonize)
 	{
