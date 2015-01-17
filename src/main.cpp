@@ -1,5 +1,10 @@
 #include <iostream>
 #include <getopt.h>
+#include <string>
+#include <unistd.h>
+#include <fstream>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "../config.h"
 #include "../include/secnet.h"
@@ -7,6 +12,7 @@
 #include "../include/blockstorage.h"
 
 void help();
+void daemonize(std::string logFile);
 
 int main(int argc, char* argv[])
 {
@@ -22,14 +28,14 @@ int main(int argc, char* argv[])
 
 	std::string listenAddress;
 
-	int daemonize = 0;
+	int flagDaemonize = 0;
 	int yes_i_am_sure = 0;
 
 	while(1)
 	{
 		static struct option longOptions[] =
 		{
-			{"daemonize", no_argument, &daemonize, 1},
+			{"daemonize", no_argument, &flagDaemonize, 1},
 			{"yes-i-am-sure", no_argument, &yes_i_am_sure, 1},
 
 			{"blockStorageFile", required_argument, 0, 'a'},
@@ -117,6 +123,11 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+	if(flagDaemonize)
+	{
+		daemonize(logFile);
+	}
+
 	Blockstorage storage(blockStorageFile);
 
 	Protocol protocolHandler(&storage);
@@ -139,8 +150,48 @@ void help()
 		<< "--tlsDHParamFile <filePath>      Path to the dhparam file" << std::endl
 		<< "--tlsCipherSuite <ciphersuite>   OpenSSL ciphersuite string" << std::endl
 		<< "--listenAddress <listenaddress>  The address and port we should listen on" << std::endl
-		<< "--logfile <filepath>             Where to put log-messages in daemon mode" << std::endl
+		<< "--logFile <filepath>             Where to put log-messages in daemon mode" << std::endl
 		<< "--daemonize                      The program will daemonize itself on startup" << std::endl
 		<< std::endl
 		<< "There is a better documentation online." << std::endl << std::endl;
+}
+
+void daemonize(std::string logFile)
+{
+	pid_t pid = fork();
+
+	if(pid < 0)
+		exit(-1);
+
+	if(pid > 0)
+	{
+		// we are the parent process
+		std::cout << "PID of daemon: " << pid << std::endl;
+		exit(0);
+	}
+
+	umask(0);
+
+	if(logFile != "")
+	{
+		std::ofstream* logOut = new std::ofstream(logFile.c_str());
+		std::cout.rdbuf(logOut->rdbuf());
+	}
+
+	pid_t sid = setsid();
+	if(sid < 0)
+	{
+		std::cout << "Error getting SID!" << std::endl;
+		exit(-1);
+	}
+
+	if(chdir("/") < 0)
+	{
+		std::cout << "Error changing working directory" << std::endl;
+		exit(-1);
+	}
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 }
