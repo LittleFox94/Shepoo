@@ -43,7 +43,7 @@ configContent="#ifndef _CONFIG_H_INCLUDED
 #define VERSION_MAJOR	0
 #define VERSION_MINOR	1
 
-#define BLOCKSIZE	$BLOCKSIZE
+#define BLOCK_SIZE	$BLOCKSIZE
 
 #endif"
 
