@@ -45,6 +45,15 @@ if [ $ADVANCED -eq 0 ]; then
 	VERSION=$(dlg --inputbox "Version-string" 0 40 "$VERSION")
 fi
 
+os=$(uname)
+
+if [ "$os" != "Linux" ]; then
+	additional="#define O_LARGEFILE 0
+#define lseek64 lseek"
+else
+	additional=""
+fi
+
 configContent="#ifndef _CONFIG_H_INCLUDED
 #define _CONFIG_H_INCLUDED
 
@@ -53,6 +62,8 @@ configContent="#ifndef _CONFIG_H_INCLUDED
 #define VERSION_MINOR	1
 
 #define BLOCK_SIZE	$BLOCKSIZE
+
+$additional
 
 #endif"
 
