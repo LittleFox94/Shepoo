@@ -3,8 +3,19 @@
 VERSION_MAJOR=0
 VERSION_MINOR=1
 
-DIALOG="whiptail"
+DIALOG="$(which dialog 2>/dev/null)"
 
+if [ -z "$DIALOG" ]; then
+	DIALOG="$(which whiptail 2>/dev/null)"
+fi
+
+if [ -z "$DIALOG" ]; then
+	echo "Neither dialog or whiptail found."
+	exit -1
+fi
+
+echo $DIALOG
+exit 0
 function dlg
 {
 	$DIALOG "$@" 3>&1 1>&2 2>&3
