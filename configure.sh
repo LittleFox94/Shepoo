@@ -14,8 +14,6 @@ if [ -z "$DIALOG" ]; then
 	exit -1
 fi
 
-echo $DIALOG
-exit 0
 function dlg
 {
 	$DIALOG "$@" 3>&1 1>&2 2>&3
