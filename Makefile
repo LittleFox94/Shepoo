@@ -1,13 +1,13 @@
-CC		=	/usr/bin/g++
+CXX?	=	/usr/bin/g++
 CFLAGS	=	-Wall -g
 LDFLAGS	=	-lssl -lcrypto
 OBJ		=	secnet.o protocol.o blockstorage.o shuffle.o main.o 
 
 shepoo:	$(OBJ)
-	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
+	$(CXX) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
 
 %.o: src/%.cpp
-	$(CC) $(CFLAGS) -c $<
+	$(CXX) $(CFLAGS) -c $<
 
 .PHONY: clean
 
