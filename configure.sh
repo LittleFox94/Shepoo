@@ -60,7 +60,7 @@ if [ "$os" != "Linux" ]; then
 		LDFLAGS="-L/usr/local/opt/openssl/lib $LDFLAGS -lresolv"
 	fi
 
-	if [[ "$os" == "*BSD" ]]; then
+	if [[ "$os" == *BSD ]]; then
 		CXX="clang++"
 	fi
 else
