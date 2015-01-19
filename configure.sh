@@ -57,7 +57,7 @@ if [ "$os" != "Linux" ]; then
 
 	if [ "$os" == "Darwin" ]; then
 		CFLAGS="-I/usr/local/opt/openssl/include $CFLAGS -D__pid_t=\"pid_t\""
-		LDFLAGS="-L/usr/local/opt/openssl/lib $LDFLAGS"
+		LDFLAGS="-L/usr/local/opt/openssl/lib $LDFLAGS -lresolv"
 	fi
 
 	if [[ "$os" == "*BSD" ]]; then
