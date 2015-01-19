@@ -145,7 +145,6 @@ int main(int argc, char* argv[])
 	if(logFile != "" && logFile.at(0) != '/')
 		logFile = std::string(cwd) + "/" + logFile;
 
-
 	if(flagDaemonize)
 	{
 		daemonize(logFile);
