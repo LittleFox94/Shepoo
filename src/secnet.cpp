@@ -107,7 +107,7 @@ void SecNet::handleWebSocket(Packet* packet)
 		}
 	}
 
-	for(; !headerEnd && headers < MaxHeaders;)
+	while(!headerEnd && headers < MaxHeades)
 	{
 		char c = 0;
 		SSL_read(_ssl, &c, 1);
