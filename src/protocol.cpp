@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "../config.h"
 #include "../include/protocol.h"
 
 Protocol::Protocol(Blockstorage* storage)

@@ -3,8 +3,6 @@
 #include <sys/stat.h>
 #include <strings.h>
 
-#include "../config.h"
-
 #include "../include/blockstorage.h"
 
 Blockstorage::Blockstorage(std::string path)

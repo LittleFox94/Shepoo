@@ -7,7 +7,6 @@
 #include <sys/types.h>
 #include <limits.h>
 
-#include "../config.h"
 #include "../include/secnet.h"
 #include "../include/protocol.h"
 #include "../include/blockstorage.h"

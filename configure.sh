@@ -3,6 +3,11 @@
 VERSION_MAJOR=0
 VERSION_MINOR=1
 
+CXX="/usr/bin/g++"
+CFLAGS="-Wall -g"
+LDFLAGS="-lssl -lcrypto"
+OBJ="secnet.o protocol.o blockstorage.o shuffle.o main.o"
+
 DIALOG="$(which dialog 2>/dev/null)"
 
 if [ -z "$DIALOG" ]; then
@@ -48,23 +53,36 @@ fi
 os=$(uname)
 
 if [ "$os" != "Linux" ]; then
-	additional="#define O_LARGEFILE 0
-#define lseek64 lseek"
+	CFLAGS="$CFLAGS -DO_LARGEFILE=\"0\" -Dlseek64=\"lseek\""
+
+	if [ "$os" == "Darwin" ]; then
+		CFLAGS="-I/usr/local/opt/openssl/include $CFLAGS -D__pid_t=\"pid_t\""
+		LDFLAGS="-L/usr/local/opt/openssl/lib $LDFLAGS"
+	fi
+
+	if [[ "$os" == "*BSD" ]]; then
+		CXX="clang++"
+	fi
 else
-	additional=""
+	LDFLAGS="$LDFLAGS -lresolv"
 fi
 
-configContent="#ifndef _CONFIG_H_INCLUDED
-#define _CONFIG_H_INCLUDED
+CFLAGS="$CFLAGS -DVERSION=\\\"$VERSION\\\" -DVERSION_MAJOR=\\\"$VERSION_MAJOR\\\" -DVERSION_MINOR=\\\"$VERSION_MINOR\\\" -DBLOCK_SIZE=\\\"$BLOCKSIZE\\\""
 
-#define VERSION		\"$VERSION\"
-#define VERSION_MAJOR	0
-#define VERSION_MINOR	1
+makefileContent="CXX? = $CXX
+CFLAGS  = $CFLAGS
+LDFLAGS = $LDFLAGS
+OBJ = $OBJ
 
-#define BLOCK_SIZE	$BLOCKSIZE
+shepoo: \$(OBJ)
+	\$(CXX) \$(CFLAGS) -o \$@ \$(OBJ) \$(LDFLAGS)
 
-$additional
+%.o: src/%.cpp
+	\$(CXX) \$(CFLAGS) -c $<
 
-#endif"
+.PHONY: clean
 
-echo "$configContent" > config.h
+clean:
+	rm \$(OBJ) shepoo > /dev/null 2>&1 || true"
+
+echo "$makefileContent" > Makefile
