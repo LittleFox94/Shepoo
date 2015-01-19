@@ -37,7 +37,7 @@ function inputSize
 
 BLOCKSIZE=$(inputSize "Blocksize" 4096)
 
-dlg --yesno "Do you want to see advanded options?" 0 40
+dlg --yesno "Do you want to see advanded options?" 6 40
 ADVANCED=$?
 
 VERSION="$VERSION_MAJOR.$VERSION_MINOR"
