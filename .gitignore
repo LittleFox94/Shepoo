@@ -31,5 +31,5 @@ shepoo
 # vim swp file
 *.swp
 
-# configuration
-config.h
+# Makefile is generated
+Makefile
