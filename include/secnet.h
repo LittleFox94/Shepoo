@@ -35,7 +35,9 @@ class SecNet
 		static void ListenLoop(SSL_CTX* serverContext);
 
 		SecNet(int socket, SSL_CTX* serverContext);
-		
+
+		 void handleWebSocket(Packet* packet);
+
 		SSL* _ssl;
 		int _socket;
 };

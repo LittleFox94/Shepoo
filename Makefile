@@ -1,6 +1,6 @@
 CXX?	=	/usr/bin/g++
 CFLAGS	=	-Wall -g
-LDFLAGS	=	-lssl -lcrypto
+LDFLAGS	=	-lssl -lcrypto -lresolv
 OBJ		=	secnet.o protocol.o blockstorage.o shuffle.o main.o 
 
 shepoo:	$(OBJ)

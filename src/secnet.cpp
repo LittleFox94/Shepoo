@@ -5,6 +5,8 @@
 #include <netdb.h>
 #include <errno.h>
 #include <openssl/err.h>
+#include <openssl/sha.h>
+#include <resolv.h>
 
 #include "../include/secnet.h"
 
@@ -43,14 +45,17 @@ SecNet::SecNet(int socket, SSL_CTX* serverContext)
 	bzero(&packet, sizeof(packet));
 	SSL_read(_ssl, &packet, sizeof(packet));
 
-	if(*(int*)&packet == 'GET ' /*0x20544547*/) // don't hurt me .. it's just "GET " as integer
+	if(*(int*)&packet == 0x20544547) // don't hurt me .. it's just "GET " as integer
 	{
 		// meh .. It's HTTP, probably Websocket as we use this one ...
-		std::cout << "Oh noes ... it's HTTP ..." << std::endl;
+		handleWebSocket(&packet);
 	}
-
+	
 	if(packet.payloadLength > MAX_PACKET_PAYLOAD_SIZE)
+	{
+		std::cout << "Client wanted to send data with payload size " << packet.payloadLength << " but we only handle a maximum of " << MAX_PACKET_PAYLOAD_SIZE << "." << std::endl;
 		exit(-1); // nope. Just nope.
+	}
 
 	uint8_t* payload = new uint8_t[packet.payloadLength];
 	SSL_read(_ssl, payload, packet.payloadLength);
@@ -71,6 +76,127 @@ void SecNet::sendPacket(Packet packet, uint8_t* payload)
 {
 	SSL_write(_ssl, &packet, sizeof(packet));
 	SSL_write(_ssl, payload, packet.payloadLength);
+}
+
+void SecNet::handleWebSocket(Packet* packet)
+{
+	const int MaxHeaders = 15;
+	
+	char initialData[sizeof(Packet) + 1];
+	bzero(initialData, sizeof(Packet) + 1);
+	memcpy(initialData, packet, sizeof(Packet));
+
+	std::string headerLines[MaxHeaders]; // we only support the first 15 headers
+	headerLines[0] = "";
+
+	int headers = 0;
+	bool headerEnd = false;
+
+	for(unsigned int i = 0; i < sizeof(Packet); i++)
+	{
+		char c = initialData[i];
+
+		if(c != '\r' && c != '\n')
+		{
+			headerLines[headers] += c;
+		}
+		else if(c == '\r')
+		{
+			headers++;
+			headerLines[headers] = "";
+		}
+	}
+
+	for(; !headerEnd && headers < MaxHeaders;)
+	{
+		char c = 0;
+		SSL_read(_ssl, &c, 1);
+
+		if(c != '\r' && c != '\n')
+		{
+			headerLines[headers] += c;
+		}
+		else if(c == '\r')
+		{
+			if(headerLines[headers] == "")
+			{
+				headerEnd = true;
+				headers--;
+				break;
+			}
+
+			headers++;
+			headerLines[headers] = "";
+		}
+	}
+
+	std::string protocol, key, version;
+
+	for(int i = 1; i < headers; i++)
+	{
+		std::string headerName = "";
+		std::string headerContent = "";
+
+		unsigned int j;
+		for(j = 0; j < headerLines[i].size(); j++)
+		{
+			char c = headerLines[i].at(j);
+
+			if(c != ':')
+				headerName += c;
+			else
+				break;
+		}
+
+		j += 2; // skip : and the following space
+
+		for(; j < headerLines[i].size(); j++)
+		{
+			char c = headerLines[i].at(j);
+			headerContent += c;
+		}
+
+		if(headerName == "Sec-WebSocket-Protocol")
+			protocol = headerContent;
+		else if(headerName == "Sec-WebSocket-Version")
+			version = headerContent;
+		else if(headerName == "Sec-WebSocket-Key")
+			key = headerContent;
+	}
+
+	if(version != "13")
+	{
+		std::cout << "Unsupported WebSocket version. Got: " << version << ", but we only support 13" << std::endl;
+		exit(-1);
+	}
+
+	if(protocol != "shepoo")
+	{
+		std::cout << "Unsupported protocol. Got: " << protocol << ", but we only support shepoo" << std::endl;
+		exit(-1);
+	}
+
+	SHA_CTX shaContext;
+	unsigned char hash[SHA_DIGEST_LENGTH];
+
+	SHA1_Init(&shaContext);
+	SHA1_Update(&shaContext, key.c_str(), key.size());
+	SHA1_Update(&shaContext, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
+	SHA1_Final(hash, &shaContext);
+
+	char acceptKey[30];
+	bzero(acceptKey, 30);
+	// hidden gem in resolv.h
+	b64_ntop(hash, sizeof(hash), acceptKey, 29);
+
+	std::string answer = std::string("HTTP/1.1 101 Switching Protocols\r\n\
+Upgrade: websocket\r\n\
+Connection: Upgrade\r\n\
+Sec-WebSocket-Accept: ") + acceptKey + std::string("\r\n\
+Sec-WebSocket-Protocol: shepoo\r\n\
+\r\n");
+
+	SSL_write(_ssl, answer.c_str(), answer.size());
 }
 
 void SecNet::Initialize(std::string listenAddress, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList)
