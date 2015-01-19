@@ -43,6 +43,12 @@ SecNet::SecNet(int socket, SSL_CTX* serverContext)
 	bzero(&packet, sizeof(packet));
 	SSL_read(_ssl, &packet, sizeof(packet));
 
+	if(*(int*)&packet == 'GET ' /*0x20544547*/) // don't hurt me .. it's just "GET " as integer
+	{
+		// meh .. It's HTTP, probably Websocket as we use this one ...
+		std::cout << "Oh noes ... it's HTTP ..." << std::endl;
+	}
+
 	if(packet.payloadLength > MAX_PACKET_PAYLOAD_SIZE)
 		exit(-1); // nope. Just nope.
 
