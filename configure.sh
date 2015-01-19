@@ -37,12 +37,12 @@ function inputSize
 
 BLOCKSIZE=$(inputSize "Blocksize" 4096)
 
-dlg --yesno "Do you want to see advanded options?" 6 40
+dlg --yesno "Do you want to see advanded options?" 8 40
 ADVANCED=$?
 
 VERSION="$VERSION_MAJOR.$VERSION_MINOR"
 
-if [ -e "/usr/bin/git" ]; then
+if [ $(which git 2>/dev/null) != "" ]; then
 	VERSION="$VERSION-$(git log -1 --abbrev-commit | head -n 1 | cut -d " " -f 2)git"
 fi
 
