@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "../config.h"
 #include "../include/protocol.h"
 
@@ -10,8 +12,11 @@ void Protocol::packetReceived(SecNet::Packet packet, uint8_t* payload, SecNet* s
 {
 	// sanity-checks
 	if(packet.version != ((VERSION_MAJOR << 4) | VERSION_MINOR))
+	{
+		std::cout << "Unsupported Packet-version: " << std::hex << *(uint64_t*)&packet << std::endl;
 		exit(-1); // we don't like non-conforming clients
-	
+	}
+
 	switch(packet.command)
 	{
 		case COMMAND_READ_BLOCK:
