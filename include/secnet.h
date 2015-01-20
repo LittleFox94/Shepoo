@@ -29,6 +29,13 @@ class SecNet
 		void sendPacket(Packet packet, uint8_t* payload);
 
 	private:
+		typedef struct
+		{
+			uint8_t finOpcode;
+			
+			
+		} __attribute__((packed)) WebSocketFrameHeader;
+
 		static bool _listening;
 		static  int _serverSocket;
 
