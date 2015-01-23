@@ -31,10 +31,12 @@ class SecNet
 	private:
 		typedef struct
 		{
-			uint8_t finOpcode;
-			
-			
-		} __attribute__((packed)) WebSocketFrameHeader;
+			uint16_t fin : 1;
+			uint16_t rsvd : 3;
+			uint16_t opcode: 4;
+			uint16_t maskFlag : 1;
+			uint16_t payloadLen : 7;
+		} WebSocketFrameHeader;
 
 		static bool _listening;
 		static  int _serverSocket;
@@ -43,7 +45,8 @@ class SecNet
 
 		SecNet(int socket, SSL_CTX* serverContext);
 
-		 void handleWebSocket(Packet* packet);
+		void handleWebSocket(Packet* packet);
+		void handleWebSocketFrame();
 
 		SSL* _ssl;
 		int _socket;

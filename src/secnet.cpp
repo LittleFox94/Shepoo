@@ -197,6 +197,13 @@ Sec-WebSocket-Protocol: shepoo\r\n\
 \r\n");
 
 	SSL_write(_ssl, answer.c_str(), answer.size());
+
+	handleWebSocketFrame();
+}
+
+void SecNet::handleWebSocketFrame()
+{
+	std::cout << "Sizeof WebSocketFrameHeader: " << sizeof(WebSocketFrameHeader) << std::endl;
 }
 
 void SecNet::Initialize(std::string listenAddress, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList)
