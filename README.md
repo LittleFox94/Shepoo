@@ -39,7 +39,7 @@ byte dataB
 
 byte data = dataA XOR dataB
 ```
-It's actually quite simple and we currently don't see any problems with this, but we are no cryptographers so please let us know if you see any. If you know the plaintext of some of the XORed nibbles on one server, you still can't guess the other data as there isn't any repeated key. 
+It's actually quite simple and we currently don't see any problems with this, but we are no cryptographers so please let us know if you see any. If you know the plaintext of some of the XORed nibbles on one server, you still can't guess the other data as there isn't any repeated key. Since we use random data as "key", this is, in theory, very close to one-time pad, which is, in theory, unbreakable.
 
 ## Known problems
 * For each block of data you want to download, you actually have to download two (amount of storage servers) blocks. In the current setup we double the amount of data transferred, in later setups this can be even worse.
