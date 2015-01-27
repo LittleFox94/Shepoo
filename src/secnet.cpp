@@ -246,6 +246,38 @@ void SecNet::handleWebSocketFrame()
 			payload[i] = payload[i] ^ ((uint8_t*)&maskingKey)[i % 4];
 		}
 	}
+
+	if(header.opcode != 0x02)
+	{
+		std::cout << "We only support binary packages!" << std::endl;
+		exit(-1);
+	}
+
+	if(payloadLength < sizeof(Packet))
+	{
+		std::cout << "WebSocket Payload must contain at least one Shepoo Packet Header" << std::endl;
+		exit(-1);
+	}
+
+	Packet* packet = (Packet*)payload;
+
+	if(payloadLength < (sizeof(Packet) + packet->payloadLength))
+	{
+		// check if it is fragmented
+		if(!header.fin)
+		{
+			// it is fragmented ..
+			std::cout << "Fragmented WebSocket message!" << std::endl;
+			exit(-1);
+		}
+		else
+		{
+			std::cout << "WebSocket frame truncated but not fragmented!" << std::endl;
+			exit(-1);
+		}
+	}
+
+	receivedPacket.emit(*packet, (uint8_t*)(payload + sizeof(Packet)), this);
 }
 
 void SecNet::Initialize(std::string listenAddress, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList)
