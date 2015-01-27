@@ -75,6 +75,42 @@ SecNet::~SecNet()
 
 void SecNet::sendPacket(Packet packet, uint8_t* payload)
 {
+	if(_webSocket)
+	{
+		uint64_t payloadLength = sizeof(packet) + packet.payloadLength;
+
+		WebSocketFrameHeader header;
+		header.opcode = 0x02;
+		header.rsvd = 0;
+		header.fin = 1;
+		header.maskFlag = 0;
+
+		if(payloadLength < 126)
+		{
+			header.payloadLen = payloadLength;
+		}
+		else if(payloadLength < 65535)
+		{
+			header.payloadLen = 126;
+		}
+		else
+		{
+			header.payloadLen = 127;
+		}
+
+		SSL_write(_ssl, &header, sizeof(header));
+
+		if(header.payloadLen == 126)
+		{
+			uint16_t length = payloadLength;
+			SSL_write(_ssl, &length, sizeof(uint16_t));
+		}
+		else if(header.payloadLen == 127)
+		{
+			SSL_write(_ssl, &payloadLength, sizeof(uint64_t));
+		}
+	}
+
 	SSL_write(_ssl, &packet, sizeof(packet));
 	SSL_write(_ssl, payload, packet.payloadLength);
 }
@@ -201,6 +237,8 @@ Sec-WebSocket-Protocol: shepoo\r\n\
 
 	uint8_t tmp[3];
 	SSL_read(_ssl, tmp, 3);
+
+	_webSocket = true;
 
 	handleWebSocketFrame();
 }

@@ -39,7 +39,7 @@ class SecNet
 		} WebSocketFrameHeader;
 
 		static bool _listening;
-		static  int _serverSocket;
+		static int _serverSocket;
 
 		static void ListenLoop(SSL_CTX* serverContext);
 
@@ -50,6 +50,7 @@ class SecNet
 
 		SSL* _ssl;
 		int _socket;
+		bool _webSocket;
 };
 
 #endif
