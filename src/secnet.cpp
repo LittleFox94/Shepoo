@@ -49,6 +49,7 @@ SecNet::SecNet(int socket, SSL_CTX* serverContext)
 	{
 		// meh .. It's HTTP, probably Websocket as we use this one ...
 		handleWebSocket(&packet);
+		return;
 	}
 	
 	if(packet.payloadLength > MAX_PACKET_PAYLOAD_SIZE)
