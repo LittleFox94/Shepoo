@@ -243,12 +243,7 @@ void SecNet::handleWebSocketFrame()
 
 		for(uint64_t i = 0; i < payloadLength; i++)
 		{
-			uint8_t masked = payload[i];
-			int j = i % 4;
-			uint8_t key = ((uint8_t*)&maskingKey)[j];
-			uint8_t demasked = masked ^ key;
-
-			payload[i] = demasked;
+			payload[i] = payload[i] ^ ((uint8_t*)&maskingKey)[i % 4];
 		}
 	}
 }
