@@ -198,12 +198,84 @@ Sec-WebSocket-Protocol: shepoo\r\n\
 
 	SSL_write(_ssl, answer.c_str(), answer.size());
 
+	uint8_t tmp[3];
+	SSL_read(_ssl, tmp, 3);
+
 	handleWebSocketFrame();
 }
 
 void SecNet::handleWebSocketFrame()
 {
-	std::cout << "Sizeof WebSocketFrameHeader: " << sizeof(WebSocketFrameHeader) << std::endl;
+	WebSocketFrameHeader header;
+	bzero(&header, sizeof(header));
+	SSL_read(_ssl, &header, sizeof(header));
+
+	uint64_t payloadLength = header.payloadLen;
+
+	std::cout << "PayloadLen: " << payloadLength << std::endl;
+
+	if(payloadLength == 126)
+	{
+		uint16_t payloadLen16;
+		SSL_read(_ssl, &payloadLen16, sizeof(payloadLen16));
+		payloadLength = payloadLen16;
+	}
+	else if(payloadLength == 127)
+	{
+		uint64_t payloadLen64;
+		SSL_read(_ssl, &payloadLen64, sizeof(payloadLen64));
+		payloadLength = payloadLen64;
+	}
+
+	uint32_t maskingKey = 0;
+
+	if(header.maskFlag)
+	{
+		SSL_read(_ssl, &maskingKey, sizeof(maskingKey));
+	}
+
+	std::cout << "PayloadLen: " << payloadLength << std::endl;
+	std::cout << "Opcode: 0x" << std::hex << (int)header.opcode << std::endl;
+	std::cout << "Fin: " << (bool)header.fin << std::endl;
+
+	uint8_t* payload = new uint8_t[payloadLength+1];
+	payload[payloadLength] = 0;
+	SSL_read(_ssl, payload, payloadLength);
+
+	if(header.maskFlag)
+	{
+		// urghs ... it's masked ... WHY THE FUCK DO THEY DO THIS?! WE HAVE TLS!
+		// (yes, this is a small rant - go f**k yourself RFC6455)
+
+		std::cout << "Masked. Key: " << std::hex << (int)maskingKey << std::endl;
+
+		for(uint64_t i = 0; i < payloadLength; i++)
+		{
+			uint8_t masked = payload[i];
+			int j = i % 4;
+			uint8_t key = ((uint8_t*)&maskingKey)[j];
+			uint8_t demasked = masked ^ key;
+
+			std::cout << "Demasking " << i << ": 0x" << std::hex << (int)masked << " with key 0x" << std::hex << (int)key << ": " << std::hex << (int)demasked << std::endl;
+
+			payload[i] = demasked;
+		}
+	}
+
+	
+
+	std::cout << "Message received:" << std::endl;
+	for(uint64_t i = 0; i < payloadLength; i++)
+	{
+		std::cout << std::hex << (int)payload[i] << " ";
+
+		if(i % 10 == 0 && i != 0)
+		{
+			std::cout << std::endl;
+		}
+	}
+
+	std::cout << std::endl << std::endl << std::dec;
 }
 
 void SecNet::Initialize(std::string listenAddress, std::string certificateFile, std::string privateKeyFile, std::string dhParamFile, std::string tlsCipherList)

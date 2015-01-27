@@ -31,11 +31,11 @@ class SecNet
 	private:
 		typedef struct
 		{
-			uint16_t fin : 1;
-			uint16_t rsvd : 3;
 			uint16_t opcode: 4;
-			uint16_t maskFlag : 1;
+			uint16_t rsvd : 3;
+			uint16_t fin : 1;
 			uint16_t payloadLen : 7;
+			uint16_t maskFlag : 1;
 		} WebSocketFrameHeader;
 
 		static bool _listening;
