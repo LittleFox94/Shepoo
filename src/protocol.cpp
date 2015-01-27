@@ -56,8 +56,19 @@ void Protocol::packetReceived(SecNet::Packet packet, uint8_t* payload, SecNet* s
 		case COMMAND_GET_MAPPING:
 			break;
 		case COMMAND_IS_BLOCK_AVAILABLE:
-			break;
+		{
+			uint64_t blockNumber = extractUint64FromPayload(payload);
+			bool available = _blockStorage->isBlockAvailable(blockNumber);
 
+			SecNet::Packet answer;
+			answer.version = packet.version;
+			answer.payloadLength = 0;
+			answer.command = available ? COMMAND_OK : COMMAND_NOK;
+
+			secnet->sendPacket(answer, NULL);
+
+			break;
+		}
 		default:
 			exit(-1);
 	}
