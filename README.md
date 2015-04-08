@@ -44,6 +44,7 @@ It's actually quite simple and we currently don't see any problems with this, bu
 ## Known problems
 * For each block of data you want to download, you actually have to download two (amount of storage servers) blocks. In the current setup we double the amount of data transferred, in later setups this can be even worse.
 * If someone grabs all servers at once, he can reconstruct all of the data without problems.
+* Users can theoretically store plain-text blocks on the server.
 
 ## What the name?!
 pwgen
