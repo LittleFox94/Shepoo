@@ -32,4 +32,4 @@ shepoo
 *.swp
 
 # Makefile is generated
-Makefile
+/server/Makefile
