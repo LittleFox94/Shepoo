@@ -19,18 +19,8 @@ Since XOR can be attacked with known-plaintext-attacks, we don't use a tradition
 ### Encrypt
 ```
 byte data
-byte random = bestRandomnessInTheWorld()
-
-nibble dataLower = LOWER(data)
-nibble dataUpper = UPPER(data)
-nibble randomLower = LOWER(data)
-nibble randomUpper = UPPER(data)
-
-nibble resultLower = dataLower XOR randomLower
-nibble resultUpper = dataUpper XOR randomUpper
- 
-byte resultA = TOHIGHER(resultUpper) | randomLower
-byte resultB = TOHIGHER(randomUpper) | resultLower
+byte resultA = bestRandomnessInTheWorld()
+byte resultB = data XOR resultA
 ```
 ### Decrypt
 ```
